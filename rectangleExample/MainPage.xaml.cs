@@ -1,11 +1,14 @@
-﻿using System;
+using rectangleExample.models;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.System;
 using Windows.UI.Core;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -24,39 +27,71 @@ namespace rectangleExample
     /// </summary>
     public sealed partial class MainPage : Page
     {
-        Ellipse exampleEllipse;
+        GameBoard gameBoard;
+        Ellipse pini;
+        Ellipse[] enemies;
+        
         public MainPage()
         {
             this.InitializeComponent();
+            
+            Rect windowRectangle = ApplicationView.GetForCurrentView().VisibleBounds;
+            gameBoard = new GameBoard(windowRectangle.Width, windowRectangle.Height);
 
-            Ellipse player = addNewEllipse();
+            pini = addNewEllipse(gameBoard.pini);
             Window.Current.CoreWindow.KeyDown += CoreWindow_KeyDown;
-        }
 
-        public Ellipse addNewEllipse()
-        {
-            exampleEllipse = new Ellipse();
-            exampleEllipse.Fill = new SolidColorBrush(Windows.UI.Colors.SteelBlue);
-            exampleEllipse.Width = 50;
-            exampleEllipse.Height = 50;
-            Canvas.SetLeft(exampleEllipse, 200);
-            Canvas.SetTop(exampleEllipse, 200);
-
-
-            // When you create a XAML element in code, you have to add
-            // it to the XAML visual tree. This example assumes you have
-            // a panel named 'layoutRoot' in your XAML file, like this:
-            // <Grid x:Name="layoutRoot>
-            layoutRoot.Children.Add(exampleEllipse);
-            return exampleEllipse;
+            enemies = new Ellipse[10];
+            for(int i = 0; i < gameBoard.enemies.Length; i++)
+            {
+                Enemy currentEnemy = gameBoard.enemies[i];
+                enemies[i] = addNewEllipse(currentEnemy);
+            }
         }
 
         private void CoreWindow_KeyDown(CoreWindow sender, KeyEventArgs args)
         {
-            if (args.VirtualKey == Windows.System.VirtualKey.Left)
+            switch (args.VirtualKey)
             {
-                Canvas.SetLeft(exampleEllipse, Canvas.GetLeft(exampleEllipse) - 1); 
+                case VirtualKey.Left:
+                    Canvas.SetLeft(pini, Canvas.GetLeft(pini) - 10);
+                    gameBoard.pini._x = (int)Canvas.GetLeft(pini) - 10;
+                    break;
+                case VirtualKey.Right:
+                    Canvas.SetLeft(pini, Canvas.GetLeft(pini) + 10);
+                    gameBoard.pini._x = (int)Canvas.GetLeft(pini) + 10;
+                    break;
+                case VirtualKey.Up:
+                    Canvas.SetTop(pini, Canvas.GetTop(pini) - 10);
+                    gameBoard.pini._y = (int)Canvas.GetTop(pini) - 10;
+                    break;
+                case VirtualKey.Down:
+                    Canvas.SetTop(pini, Canvas.GetTop(pini) + 10);
+                    gameBoard.pini._y = (int)Canvas.GetTop(pini) + 10;
+                    break;
             }
+
         }
+
+        public Ellipse addNewEllipse(Piece piece)
+        {
+            Ellipse exampleEllipse = new Ellipse();
+
+            if(piece is Player)
+                exampleEllipse.Fill = new SolidColorBrush(Windows.UI.Colors.SteelBlue);
+            else 
+                exampleEllipse.Fill = new SolidColorBrush(Windows.UI.Colors.OrangeRed);
+
+            exampleEllipse.Width = piece._width;
+            exampleEllipse.Height = piece._height;
+
+            Canvas.SetLeft(exampleEllipse, piece._x);
+            Canvas.SetTop(exampleEllipse, piece._y);
+
+            myCanvas.Children.Add(exampleEllipse);
+
+            return exampleEllipse;
+        }
+
     }
 }
